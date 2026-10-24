@@ -6,16 +6,13 @@ const { Pool, types } = require('pg');
 types.setTypeParser(1082, function(stringValue){return stringValue})
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://sabar-report-pwa.hypafix2.workers.dev'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 app.use(express.json());
 
-// const pool = new Pool({
-//     host: process.env.DB_HOST,
-//     port: process.env.DB_PORT,
-//     user: process.env.DB_USER,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME
-// });
 const pool = new Pool ({
     connectionString : process.env.DATABASE_URL,
     ssl: {rejectUnauthorized: false}
@@ -346,3 +343,4 @@ app.put('/api/shift_handler/:id_shift', async(req,res) => {
         res.status(500).json({error: 'Gagal memperbaharui Data Shift.'})
     }
 })
+module.exports = app;
