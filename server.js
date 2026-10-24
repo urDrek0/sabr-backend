@@ -17,7 +17,8 @@ app.use(express.json());
 //     database: process.env.DB_NAME
 // });
 const pool = new Pool ({
-    connectionString : process.env.DATABASE_URL
+    connectionString : process.env.DATABASE_URL,
+    ssl: {rejectUnauthorized: false}
 })
 app.get('/api/pasien', async (req, res) => {
     try{
