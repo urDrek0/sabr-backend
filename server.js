@@ -7,7 +7,11 @@ types.setTypeParser(1082, function(stringValue){return stringValue})
 
 const app = express();
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://sabar-report-pwa.hypafix2.workers.dev'],
+    origin: [
+        'http://localhost:3000', 
+        'https://sabar-report-pwa.hypafix2.workers.dev', 
+        'https://sabar-report-pwa.pages.dev'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
