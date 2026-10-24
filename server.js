@@ -18,7 +18,7 @@ app.use(cors({
 app.use(express.json());
 
 const pool = new Pool ({
-    connectionString : 'postgresql://postgres:#fmVi*8.HrK9V!C@db.cytjkhrdicrnvgvzpshu.supabase.co:5432/postgres',
+    connectionString : process.env.DATABASE_URL,
     ssl: {rejectUnauthorized: false}
 })
 app.get('/api/pasien', async (req, res) => {
