@@ -6,21 +6,34 @@ const { Pool, types } = require('pg');
 types.setTypeParser(1082, function(stringValue){return stringValue})
 
 const app = express();
+
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+});
+
+// const pool = new Pool ({
+//     connectionString : process.env.DATABASE_URL,
+//     ssl: {rejectUnauthorized: false}
+// })
+
 app.use(cors({
     origin: [
-        'http://localhost:3000', 
-        'https://sabar-report-pwa.hypafix2.workers.dev', 
+        'http://127.0.0.1:5500',
+        'http://localhost:5500',
+        'http://localhost:3000',
+        'https://sabar-report-pwa.hypafix2.workers.dev',
         'https://sabar-report-pwa.pages.dev'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
+
 app.use(express.json());
 
-const pool = new Pool ({
-    connectionString : process.env.DATABASE_URL,
-    ssl: {rejectUnauthorized: false}
-})
 app.get('/api/pasien', async (req, res) => {
     try{
         const result = await pool.query('select * from daftar_pasien order by id_pasien');
@@ -54,6 +67,16 @@ app.get('/api/sabr_report', async (req, res) => {
 app.get('/api/shift_handler', async (req, res) => {
     try{
         const result = await pool.query('select * from shift_handler order by id_shift');
+        res.json(result.rows);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({error: err.message});
+    }
+});
+
+app.get('/api/shift_pasien_counter', async (req, res) => {
+    try{
+        const result = await pool.query('select * from shift_pasien_counter order by id_counter');
         res.json(result.rows);
     } catch (err) {
         console.log(err);
@@ -172,6 +195,28 @@ app.post('/api/shift_handler', async(req,res) => {
     }
 })
 
+app.post('/api/shift_pasien_counter', async(req, res) => {
+    try{
+        const {tanggal_shift, shift, pasien_awal, pasien_masuk, pasien_pulang} = req.body
+        const queryText = `
+        INSERT INTO shift_pasien_counter
+        (tanggal_shift, shift, pasien_awal, pasien_masuk, pasien_pulang)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *;
+        `
+        const values = [tanggal_shift, shift, pasien_awal, pasien_masuk, pasien_pulang]
+        const result = await pool.query(queryText, values)
+        res.status(201).json(result.rows[0])
+        console.log("Data Counter Ditambahkan")
+    }catch(err){
+        console.log('error inserting data counter: ', err)
+        if (err.code === '23505'){
+            return res.status(409).json({error: 'Data counter ini sudah ada'})
+        }
+        res.status(500).json({error: 'Gagal menambah Data counter.'})
+    }
+})
+
 app.delete('/api/sabr_report/:id_report', async (req,res) => {
     const reportId = req.params.id_report
     try{
@@ -228,6 +273,21 @@ app.delete('/api/pasien/:id_pasien', async (req,res) => {
     }catch(err){
         console.error("Error Deleting Report : ", err)
         res.status(500).json({error: 'Gagal Menghapus Laporan'})
+    }
+})
+
+app.delete('/api/shift_pasien_counter/:id_counter', async (req,res) => {
+    const counterId = req.params.id_counter
+    try{
+        const result = await pool.query ('DELETE FROM shift_pasien_counter WHERE id_counter = $1 RETURNING id_counter', [counterId])
+        if (result.rowCount === 0){
+            return res.status(400).json({error : 'Data Mobilitas'})
+        }
+        console.log('Data Mobilitas berhasil dihapus')
+        res.status(200).json({ message: 'Data Mobilitas berhasil dihapus' });
+    }catch(err){
+        console.error("Error Deleting Data Mobilitas : ", err)
+        res.status(500).json({error: 'Gagal Menghapus Data Mobilitas'})
     }
 })
 

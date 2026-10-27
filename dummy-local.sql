@@ -34,5 +34,16 @@ create table shift_handler (
   unique (tanggal_shift, shift, pegawai_id)
 );
 
+CREATE TABLE shift_pasien_counter (
+    id_counter bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tanggal_shift date NOT NULL,
+    shift text not null check (shift in ('pagi', 'siang', 'malam')),
+    pasien_awal integer NOT NULL DEFAULT 0,
+    pasien_masuk integer NOT NULL DEFAULT 0,
+    pasien_pulang integer NOT NULL DEFAULT 0,
+    total_pasien integer GENERATED ALWAYS AS (pasien_awal + pasien_masuk + pasien_pulang) STORED,
+    UNIQUE(tanggal_shift, shift)
+);
+
 create unique index satu_leader_per_shift 
     on shift_handler (tanggal_shift, shift) where shift_leader;
