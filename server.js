@@ -407,4 +407,28 @@ app.put('/api/shift_handler/:id_shift', async(req,res) => {
         res.status(500).json({error: 'Gagal memperbaharui Data Shift.'})
     }
 })
+
+app.put('/api/shift_pasien_counter/:id_counter', async(req,res) => {
+    try{
+        const id = req.params.id_counter
+        const {tanggal_shift, shift, pasien_awal, pasien_masuk, pasien_pulang} = req.body
+
+        const queryText = `
+        UPDATE shift_pasien_counter
+        SET tanggal_shift = $1, shift = $2, pasien_awal = $3, pasien_masuk = $4, pasien_pulang =$5
+        WHERE id_counter = $6
+        RETURNING *;
+        `
+        const values = [tanggal_shift, shift, pasien_awal, pasien_masuk, pasien_pulang, id]
+        const result = await pool.query(queryText, values)
+        res.status(201).json(result.rows[0])
+        console.log("Data Mobilitas Pasien Diperbaharui")
+    }catch(err){
+        console.log('error inserting Data Mobilitas: ', err)
+        if (err.code === '23505'){
+            return res.status(409).json({error: 'Data Mobilitas ini sudah ada'})
+        }
+        res.status(500).json({error: 'Gagal memperbaharui Data Mobilitas.'})
+    }
+})
 module.exports = app;
